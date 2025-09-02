@@ -7,19 +7,21 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
+  <div class="game-wrapper">
     <h1>🎡 FRENWHEEL 🎡</h1>
     <p class="subtitle">
-      Spin the wheel. Pay 30K FRENS per spin. <br />
-      Rewards: 80% 20K | 5% 50K | 100K unlocked after 10 spins
+      Spin the wheel — Pay <strong>30K FRENS</strong> per spin.<br />
+      Rewards: <span>80% → 20K</span> | <span>5% → 50K</span> | <span>100K unlocks after 10 spins</span>
     </p>
 
-    <button id="connectButton">🔗 Connect Wallet</button>
-    <p id="walletAddress">Not connected</p>
+    <div class="wallet-section">
+      <button id="connectButton">🔗 Connect Wallet</button>
+      <p id="walletAddress">Not connected</p>
+    </div>
 
-    <div class="wheel-container">
+    <div class="wheel-section">
       <canvas id="wheelCanvas" width="400" height="400"></canvas>
-      <button id="spinButton" disabled>Pay 30K FRENS & Spin</button>
+      <button id="spinButton" disabled>🎰 Pay 30K FRENS & Spin</button>
     </div>
 
     <p id="resultText"></p>
