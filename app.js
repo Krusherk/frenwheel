@@ -5,9 +5,14 @@ const SPIN_COST = 30000; // 30K FRENS
 let provider, signer, contract, token, currentWallet;
 let spinCount = 0;
 
-// ABI placeholders (replace with your full ABIs)
-const ABI = [...];      // SpinWheel ABI
-const TOKEN_ABI = [...];// FRENS Token ABI
+// Minimal ABIs so app doesn't crash
+const ABI = [
+  { "inputs": [], "name": "spin", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
+];
+const TOKEN_ABI = [
+  { "inputs": [ { "name": "spender", "type": "address" }, { "name": "amount", "type": "uint256" } ],
+    "name": "approve", "outputs": [], "stateMutability": "nonpayable", "type": "function" }
+];
 
 // ================= WALLET CONNECT =================
 async function connectWallet() {
@@ -70,17 +75,7 @@ async function spinWheel() {
     return;
   }
 
-  // Check allowance
-  const allowance = await token.allowance(currentWallet, CONTRACT_ADDRESS);
-  if (allowance < SPIN_COST) {
-    const approveTx = await token.approve(CONTRACT_ADDRESS, ethers.MaxUint256);
-    await approveTx.wait();
-  }
-
-  // Call contract spin
-  const tx = await contract.spin();
-  await tx.wait();
-
+  // Fake rewards for now (replace with contract logs parsing later)
   spinCount++;
   let reward;
   const random = Math.random();
@@ -128,14 +123,14 @@ function drawWheel(highlightReward = "") {
     ctx.restore();
   });
 
-  // Highlight last reward
-  if (highlightReward) {
-    ctx.strokeStyle = "#FFD700";
-    ctx.lineWidth = 5;
-    ctx.beginPath();
-    ctx.arc(200, 200, 200, 0, 2 * Math.PI);
-    ctx.stroke();
-  }
+  // Pointer
+  ctx.fillStyle = "yellow";
+  ctx.beginPath();
+  ctx.moveTo(200, 0);
+  ctx.lineTo(190, 30);
+  ctx.lineTo(210, 30);
+  ctx.closePath();
+  ctx.fill();
 }
 
 // ================= EVENT LISTENERS =================
