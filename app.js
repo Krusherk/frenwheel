@@ -43,24 +43,28 @@ async function connectWallet() {
   }
 
   try {
+    // Request accounts first
+    const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    signer = provider.getSigner();
+    const address = accounts[0];
+
+    // Check correct chain
     const chainId = await ethereum.request({ method: "eth_chainId" });
     if (chainId !== "0x279f") {
-      alert("Please switch MetaMask to Monad Testnet (chainId 0x279f)");
+      alert("Switch to Monad Testnet (chainId 0x279f)");
       return;
     }
 
-    await ethereum.request({ method: "eth_requestAccounts" });
-    provider = new ethers.providers.Web3Provider(window.ethereum);
-    signer = provider.getSigner();
-    const address = await signer.getAddress();
-
+    // Update UI
     document.getElementById("walletAddress").innerText = `Connected: ${address}`;
     document.getElementById("spinButton").disabled = false;
 
+    // Load contracts
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     token = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
   } catch (err) {
-    console.error(err);
+    console.error("Wallet connect error:", err);
     alert("Wallet connection failed.");
   }
 }
@@ -75,9 +79,12 @@ async function spinWheel() {
 
   try {
     const amount = ethers.utils.parseUnits("30000", 18);
+
+    // Approve first
     const approveTx = await token.approve(CONTRACT_ADDRESS, amount);
     await approveTx.wait();
 
+    // Spin transaction
     const spinTx = await contract.spin();
     const receipt = await spinTx.wait();
 
@@ -104,14 +111,14 @@ async function spinWheel() {
 
     drawWheel();
   } catch (err) {
-    console.error(err);
+    console.error("Spin error:", err);
     alert("Spin failed.");
   }
 }
 
 document.getElementById("spinButton").onclick = spinWheel;
 
-// Wheel drawing
+// Draw wheel
 const canvas = document.getElementById("wheelCanvas");
 const ctx = canvas.getContext("2d");
 const prizes = ["Nothing", "20K", "50K", "100K"];
@@ -136,6 +143,7 @@ function drawWheel() {
     ctx.restore();
   });
 
+  // Pointer
   ctx.fillStyle = "yellow";
   ctx.beginPath();
   ctx.moveTo(200, 0);
