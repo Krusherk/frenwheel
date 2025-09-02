@@ -20,53 +20,69 @@ async function connectWallet() {
   connectBtn.disabled = true;
 
   if (!window.ethereum) {
-    alert("Please install MetaMask");
+    alert("Please install MetaMask!");
     connectBtn.disabled = false;
     return;
   }
 
   try {
-    provider = new ethers.BrowserProvider(window.ethereum);
+    // Request account access
     const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+    if (!accounts || accounts.length === 0) {
+      throw new Error("No accounts found");
+    }
+
+    provider = new ethers.BrowserProvider(window.ethereum);
     signer = await provider.getSigner();
     currentWallet = accounts[0];
 
+    // Force switch to Monad Testnet (chainId 10143)
+    const monadTestnet = {
+      chainId: "0x279f", // 10143
+      chainName: "Monad Testnet",
+      nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 },
+      rpcUrls: ["https://rpc.monad.xyz"], // example RPC
+      blockExplorerUrls: ["https://explorer.monad.xyz/"],
+    };
+
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: monadTestnet.chainId }],
+      });
+    } catch (switchError) {
+      // If the chain is not added, add it
+      if (switchError.code === 4902) {
+        await window.ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [monadTestnet],
+        });
+      } else {
+        throw switchError;
+      }
+    }
+
+    // Save wallet for auto reconnect
     localStorage.setItem("frenwheel_wallet", currentWallet);
 
+    // Update UI
     document.getElementById("walletAddress").innerText = `Connected: ${currentWallet}`;
     document.getElementById("spinButton").disabled = false;
+    document.getElementById("connectButton").style.display = "none";
+    document.getElementById("disconnectButton").style.display = "inline-block";
 
+    // Init contracts
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     token = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
 
-    document.getElementById("connectButton").style.display = "none";
-    document.getElementById("disconnectButton").style.display = "inline-block";
   } catch (err) {
     console.error("Wallet connect failed:", err);
-    alert("Wallet connect failed. Check MetaMask.");
+    alert("Wallet connect failed. Please check MetaMask popup.");
   }
 
   connectBtn.disabled = false;
 }
 
-function disconnectWallet() {
-  localStorage.removeItem("frenwheel_wallet");
-  currentWallet = null;
-  signer = null;
-  provider = null;
-  document.getElementById("walletAddress").innerText = "";
-  document.getElementById("connectButton").style.display = "inline-block";
-  document.getElementById("disconnectButton").style.display = "none";
-  document.getElementById("spinButton").disabled = true;
-}
-
-// Auto reconnect on refresh
-window.addEventListener("load", async () => {
-  const savedWallet = localStorage.getItem("frenwheel_wallet");
-  if (savedWallet) {
-    await connectWallet();
-  }
-});
 
 // ================= SPIN LOGIC =================
 async function spinWheel() {
