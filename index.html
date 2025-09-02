@@ -7,28 +7,30 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="game-wrapper">
+  <div class="container">
     <h1>🎡 FRENWHEEL 🎡</h1>
     <p class="subtitle">
-      Spin the wheel — Pay <strong>30K FRENS</strong> per spin.<br />
-      Rewards: <span>80% → 20K</span> | <span>5% → 50K</span> | <span>100K unlocks after 10 spins</span>
+      Spin the wheel. Pay 30K FRENS per spin. <br />
+      Rewards: 80% 20K | 5% 50K | 100K unlocked after 10 spins
     </p>
 
     <div class="wallet-section">
       <button id="connectButton">🔗 Connect Wallet</button>
+      <button id="disconnectButton" style="display:none;">❌ Disconnect</button>
       <p id="walletAddress">Not connected</p>
     </div>
 
-    <div class="wheel-section">
+    <div class="wheel-container">
       <canvas id="wheelCanvas" width="400" height="400"></canvas>
-      <button id="spinButton" disabled>🎰 Pay 30K FRENS & Spin</button>
+      <button id="spinButton" disabled>Pay 30K FRENS & Spin</button>
     </div>
 
     <p id="resultText"></p>
     <p id="spinCount">Spins: 0</p>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/ethers/dist/ethers.min.js"></script>
+  <!-- ethers.js v6 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.1/ethers.umd.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
