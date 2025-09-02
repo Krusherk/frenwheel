@@ -1,68 +1,80 @@
 body {
   margin: 0;
   height: 100vh;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: Arial, sans-serif;
+  background: radial-gradient(circle at top, #1a0028, #0d0014, #000);
+  color: #fff;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at top left, #0a0015, #1a0030, #2a0045);
-  color: white;
-  text-align: center;
 }
 
 .container {
-  max-width: 600px;
-  width: 100%;
+  text-align: center;
 }
 
 .title {
   font-size: 3rem;
-  margin-bottom: 10px;
+  margin-bottom: 0.5rem;
 }
 
 .subtitle {
   font-size: 1.2rem;
-  margin-bottom: 20px;
+  margin-bottom: 0.2rem;
 }
 
-.wallet {
-  margin-bottom: 20px;
-}
-
-button {
-  background: linear-gradient(90deg, #5f27cd, #341f97);
-  border: none;
-  color: white;
-  padding: 12px 20px;
-  margin: 8px;
-  border-radius: 10px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-button:disabled {
-  background: #444;
-  cursor: not-allowed;
-}
-
-button:hover:not(:disabled) {
-  transform: scale(1.05);
+.rules {
+  font-size: 0.9rem;
+  color: #bbb;
+  margin-bottom: 2rem;
 }
 
 .wheel-container {
-  margin: 20px auto;
+  position: relative;
+  display: inline-block;
 }
 
-#infoText {
-  margin-top: 15px;
+#wheelCanvas {
+  border-radius: 50%;
+  border: 8px solid #fff;
+  margin-bottom: 1rem;
+}
+
+#spinButton {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #6c2dc7;
+  color: white;
+  font-size: 1.2rem;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.wallet-controls {
+  margin-top: 2rem;
+}
+
+button {
+  background: #6c2dc7;
+  border: none;
+  padding: 10px 20px;
+  margin: 0.3rem;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #333;
+  cursor: not-allowed;
+}
+
+#status {
+  margin-top: 1rem;
   font-size: 0.9rem;
-  color: #ccc;
-}
-
-#result {
-  margin-top: 20px;
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: #ffdd57;
+  color: #aaa;
 }
