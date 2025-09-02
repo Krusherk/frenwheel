@@ -1,33 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>FRENWHEEL</title>
-  <link rel="stylesheet" href="style.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.0/dist/ethers.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.6.4/dist/ethers.min.js"></script>
 </head>
 <body>
   <div class="container">
-    <h1 class="title">🎡 FRENWHEEL 🎡</h1>
-    <p class="subtitle">Spin the wheel for FRENS! <br>Costs <b>30K FRENS</b> per spin.</p>
+    <h1 class="title">FRENWHEEL</h1>
+    <p class="subtitle">Spin the wheel — 30K FRENS per spin</p>
+    <p class="rules">🎯 80% chance: 20K | 5% chance: 50K | 🔒 100K after 10 spins</p>
 
-    <div class="wallet">
+    <div class="wheel-container">
+      <canvas id="wheelCanvas" width="400" height="400"></canvas>
+      <button id="spinButton" disabled>SPIN</button>
+    </div>
+
+    <div class="wallet-controls">
       <button id="connectButton">Connect Wallet</button>
       <button id="disconnectButton" style="display:none;">Disconnect</button>
       <p id="walletAddress"></p>
     </div>
 
-    <div class="wheel-container">
-      <canvas id="wheelCanvas" width="400" height="400"></canvas>
-    </div>
-
-    <button id="spinButton" disabled>Pay 30K FRENS & Spin</button>
-
-    <p id="infoText">Prizes: 80% 20K | 5% 50K | 100K unlocked after 10 spins</p>
-    <p id="result"></p>
+    <p id="status"></p>
   </div>
-
   <script src="app.js"></script>
 </body>
 </html>
