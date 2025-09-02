@@ -1,79 +1,47 @@
-// --- Contract addresses ---
+// ================= CONFIG =================
 const CONTRACT_ADDRESS = "0x8D478F0B6B60bedEe070041fa829486Fe371C340"; // SpinWheel
-const TOKEN_ADDRESS = "0x1657e623c89d3b8ebcf18e6dd2c0a16d37668de8";  // FRENS token
-
-// --- ABIs ---
-const ABI = [
-  {
-    type: "function",
-    name: "spin",
-    inputs: [],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "event",
-    name: "Spin",
-    inputs: [
-      { name: "player", type: "address", indexed: true },
-      { name: "reward", type: "uint256", indexed: false },
-    ],
-    anonymous: false,
-  },
-];
-const TOKEN_ABI = [
-  {
-    type: "function",
-    name: "approve",
-    inputs: [
-      { name: "spender", type: "address" },
-      { name: "amount", type: "uint256" },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-];
-
-// --- State ---
-let provider, signer, contract, token;
-let currentWallet = null;
+const TOKEN_ADDRESS = "0x1657e623c89d3b8ebcf18e6dd2c0a16d37668de8";   // FRENS token
+const SPIN_COST = 30000; // 30K FRENS
+let provider, signer, contract, token, currentWallet;
 let spinCount = 0;
 
-// --- Wallet connect/disconnect ---
+// ABI placeholders (replace with your full ABIs)
+const ABI = [...];      // SpinWheel ABI
+const TOKEN_ABI = [...];// FRENS Token ABI
+
+// ================= WALLET CONNECT =================
 async function connectWallet() {
+  const connectBtn = document.getElementById("connectButton");
+  connectBtn.disabled = true;
+
   if (!window.ethereum) {
     alert("Please install MetaMask");
+    connectBtn.disabled = false;
     return;
   }
+
   try {
     provider = new ethers.BrowserProvider(window.ethereum);
     const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
     signer = await provider.getSigner();
     currentWallet = accounts[0];
 
-    // Save wallet for auto-reconnect
     localStorage.setItem("frenwheel_wallet", currentWallet);
 
-    // Check correct network
-    const { chainId } = await provider.getNetwork();
-    if (chainId !== 0x279f) {
-      alert("Please switch MetaMask to Monad Testnet (chainId 0x279f)");
-      return;
-    }
-
-    // Update UI
     document.getElementById("walletAddress").innerText = `Connected: ${currentWallet}`;
     document.getElementById("spinButton").disabled = false;
-    document.getElementById("connectButton").style.display = "none";
-    document.getElementById("disconnectButton").style.display = "inline-block";
 
-    // Load contracts
     contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
     token = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, signer);
+
+    document.getElementById("connectButton").style.display = "none";
+    document.getElementById("disconnectButton").style.display = "inline-block";
   } catch (err) {
     console.error("Wallet connect failed:", err);
-    alert("Wallet connect failed. Check console.");
+    alert("Wallet connect failed. Check MetaMask.");
   }
+
+  connectBtn.disabled = false;
 }
 
 function disconnectWallet() {
@@ -81,16 +49,13 @@ function disconnectWallet() {
   currentWallet = null;
   signer = null;
   provider = null;
-  contract = null;
-  token = null;
-
-  document.getElementById("walletAddress").innerText = "Not connected";
-  document.getElementById("spinButton").disabled = true;
+  document.getElementById("walletAddress").innerText = "";
   document.getElementById("connectButton").style.display = "inline-block";
   document.getElementById("disconnectButton").style.display = "none";
+  document.getElementById("spinButton").disabled = true;
 }
 
-// Auto-reconnect if wallet was connected before
+// Auto reconnect on refresh
 window.addEventListener("load", async () => {
   const savedWallet = localStorage.getItem("frenwheel_wallet");
   if (savedWallet) {
@@ -98,88 +63,84 @@ window.addEventListener("load", async () => {
   }
 });
 
-// --- Game logic ---
+// ================= SPIN LOGIC =================
 async function spinWheel() {
-  if (!contract || !token) {
-    alert("Please connect wallet first.");
+  if (!currentWallet) {
+    alert("Connect wallet first!");
     return;
   }
 
-  try {
-    // Approve SpinWheel to spend 30K FRENS
-    const amount = ethers.parseUnits("30000", 18);
-    const approveTx = await token.approve(CONTRACT_ADDRESS, amount);
+  // Check allowance
+  const allowance = await token.allowance(currentWallet, CONTRACT_ADDRESS);
+  if (allowance < SPIN_COST) {
+    const approveTx = await token.approve(CONTRACT_ADDRESS, ethers.MaxUint256);
     await approveTx.wait();
-
-    // Call spin()
-    const spinTx = await contract.spin();
-    const receipt = await spinTx.wait();
-
-    let reward = 0;
-    for (const log of receipt.logs) {
-      try {
-        const parsed = contract.interface.parseLog(log);
-        if (parsed.name === "Spin") {
-          reward = parsed.args.reward.toString();
-        }
-      } catch {}
-    }
-
-    spinCount++;
-    document.getElementById("spinCount").innerText = `Spins: ${spinCount}`;
-
-    if (reward == 0) {
-      document.getElementById("resultText").innerText = "💀 Nothing this time!";
-    } else {
-      document.getElementById("resultText").innerText = `🎉 You won ${reward} FRENS!`;
-    }
-
-    drawWheel();
-  } catch (err) {
-    console.error(err);
-    alert("Spin failed.");
   }
+
+  // Call contract spin
+  const tx = await contract.spin();
+  await tx.wait();
+
+  spinCount++;
+  let reward;
+  const random = Math.random();
+
+  if (spinCount >= 10 && random < 0.05) {
+    reward = "🎉 100K FRENS (Unlocked after 10 spins!)";
+    spinCount = 0;
+  } else if (random < 0.8) {
+    reward = "20K FRENS";
+  } else if (random < 0.85) {
+    reward = "50K FRENS";
+  } else {
+    reward = "Nothing 😢";
+  }
+
+  document.getElementById("result").innerText = `You won: ${reward}`;
+  drawWheel(reward);
 }
 
-// --- UI buttons ---
-document.getElementById("connectButton").onclick = connectWallet;
-document.getElementById("disconnectButton").onclick = disconnectWallet;
-document.getElementById("spinButton").onclick = spinWheel;
+// ================= WHEEL DRAWING =================
+function drawWheel(highlightReward = "") {
+  const canvas = document.getElementById("wheelCanvas");
+  const ctx = canvas.getContext("2d");
+  const prizes = ["Nothing", "20K FRENS", "50K FRENS", "100K FRENS"];
+  const colors = ["#222", "#5f27cd", "#10ac84", "#ee5253"];
 
-// --- Wheel drawing ---
-const canvas = document.getElementById("wheelCanvas");
-const ctx = canvas.getContext("2d");
-const prizes = ["Nothing", "20K", "50K", "100K"];
-const colors = ["#220033", "#330066", "#440099", "#5500cc"];
-
-function drawWheel() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const angle = (2 * Math.PI) / prizes.length;
 
+  const arc = (2 * Math.PI) / prizes.length;
   prizes.forEach((prize, i) => {
+    const angle = i * arc;
     ctx.beginPath();
+    ctx.fillStyle = colors[i];
     ctx.moveTo(200, 200);
-    ctx.arc(200, 200, 200, i * angle, (i + 1) * angle);
-    ctx.fillStyle = colors[i % colors.length];
+    ctx.arc(200, 200, 200, angle, angle + arc);
+    ctx.lineTo(200, 200);
     ctx.fill();
 
     ctx.save();
     ctx.translate(200, 200);
-    ctx.rotate(i * angle + angle / 2);
+    ctx.rotate(angle + arc / 2);
     ctx.fillStyle = "white";
     ctx.font = "16px Arial";
     ctx.fillText(prize, 60, 10);
     ctx.restore();
   });
 
-  // pointer
-  ctx.fillStyle = "yellow";
-  ctx.beginPath();
-  ctx.moveTo(200, 0);
-  ctx.lineTo(190, 30);
-  ctx.lineTo(210, 30);
-  ctx.closePath();
-  ctx.fill();
+  // Highlight last reward
+  if (highlightReward) {
+    ctx.strokeStyle = "#FFD700";
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.arc(200, 200, 200, 0, 2 * Math.PI);
+    ctx.stroke();
+  }
 }
+
+// ================= EVENT LISTENERS =================
+document.getElementById("connectButton").addEventListener("click", connectWallet);
+document.getElementById("disconnectButton").addEventListener("click", disconnectWallet);
+document.getElementById("spinButton").addEventListener("click", spinWheel);
 
 drawWheel();
